@@ -82,18 +82,18 @@ describe('PageBalances', () => {
     expect(wrapper.findAll('.ni-li').length).toBe(2) // 2 denoms
   })
 
-  it('should show the n/a message if there are no denoms', () => {
+  it('should show the "None Available" message if there are no denoms', () => {
     store.commit('setWalletBalances', [])
     wrapper.update()
-    expect(wrapper.findAll('.ni-li').length).toBe(1) // 1 n/a / 0 denoms
-    expect(wrapper.findAll('.ni-li').at(0).html()).toContain('N/A') // 1 address + 1 n/a
+    expect(wrapper.findAll('.ni-li').length).toBe(1) // 1 "None Available" / 0 denoms
+    expect(wrapper.findAll('.ni-li').at(0).html()).toContain('None Available') // 1 address + 1 "None Available"
   })
 
-  it('should not show the n/a message if there denoms', () => {
+  it('should not show the "None Available" message if there denoms', () => {
     wrapper.update()
     expect(wrapper.findAll('.ni-li').length).toBe(2) // 2 denoms
-    expect(wrapper.findAll('.ni-li').at(0).html()).not.toContain('N/A')
-    expect(wrapper.findAll('.ni-li').at(1).html()).not.toContain('N/A')
+    expect(wrapper.findAll('.ni-li').at(0).html()).not.toContain('None Available')
+    expect(wrapper.findAll('.ni-li').at(1).html()).not.toContain('None Available')
   })
   // TODO do we test mousetrap stuff??
 })

@@ -25,7 +25,7 @@ page(title='Balance')
       :dt="i.denom.toUpperCase()"
       :dd="i.amount")
     list-item(
-      v-if="wallet.loadedBalances && wallet.denoms.length === 0"
+      v-if="(wallet.loadedBalances && wallet.denoms.length === 0 && wallet.balances.length === 0)"
       dt=" "
       dd="None Available")
 </template>
