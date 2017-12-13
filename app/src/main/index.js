@@ -9,6 +9,7 @@ let semver = require('semver')
 // this dependency is wrapped in a file as it was not possible to mock the import with jest any other way
 let event = require('event-to-promise')
 let toml = require('toml')
+let TmRpc = require('tendermint')
 let pkg = require('../../../package.json')
 let mockServer = require('./mockServer.js')
 
@@ -319,6 +320,34 @@ function setupLogging (root) {
   }
 }
 
+async function getNodeIP (root) {
+  // test if we are running a local node
+  try {
+    let client = TmRpc('http://localhost:46657')
+    await new Promise((resolve, reject) => {
+      client.status((err, res) => err ? reject(err) : resolve())
+    })
+    return 'localhost'
+  } catch (err) {}
+
+  // pick a random seed node from config.toml
+  // TODO: user-specified nodes, support switching?
+  let configText
+  try {
+    configText = fs.readFileSync(join(root, 'config.toml'), 'utf8')
+  } catch (e) {
+    throw new Error(`Can't open config.toml: ${e.message}`)
+  }
+  let config = toml.parse(configText)
+  let seeds = config.p2p.seeds.split(',')
+  if (config.p2p.seeds === '' || seeds.length === 0) {
+    throw new Error('No seeds specified in config.toml')
+  }
+  let nodeIP = seeds[Math.floor(Math.random() * seeds.length)]
+  log('Picked seed:', nodeIP, 'of', seeds)
+  return nodeIP
+}
+
 process.on('exit', shutdown)
 process.on('uncaughtException', function (err) {
   logError('[Uncaught Exception]', err)
@@ -399,21 +428,7 @@ async function main () {
   let genesis = JSON.parse(genesisText)
   let chainId = genesis.chain_id
 
-  // pick a random seed node from config.toml
-  // TODO: user-specified nodes, support switching?
-  let configText
-  try {
-    configText = fs.readFileSync(join(root, 'config.toml'), 'utf8')
-  } catch (e) {
-    throw new Error(`Can't open config.toml: ${e.message}`)
-  }
-  let config = toml.parse(configText)
-  let seeds = config.p2p.seeds.split(',')
-  if (config.p2p.seeds === '' || seeds.length === 0) {
-    throw new Error('No seeds specified in config.toml')
-  }
-  nodeIP = seeds[Math.floor(Math.random() * seeds.length)]
-  log('Picked seed:', nodeIP, 'of', seeds)
+  nodeIP = await getNodeIP(root)
   // replace port with default RPC port
   nodeIP = `${nodeIP.split(':')[0]}:46657`
   log(`Initializing baseserver with remote node ${nodeIP}`)
